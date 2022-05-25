@@ -1,0 +1,30 @@
+Nap üzenete megadása
+banner motd #Budapest#
+
+Konzol és telnet kapcsolatok megadása:
+en
+conf t
+line con 0
+password class
+login 
+exit
+line vty 0 15
+password class
+login
+exit
+enable secret cisco
+service password-encryption
+
+Felhasználói EXEC mód jelszava
+R1(config)# line console 0
+R1(config-line)# password titok
+R1(config-line)# login
+R1(config-line)# end
+R1(config)#
+
+
+Privilegizált (EXEC) üzemmód titkosítatlan (cisco) és titkosított jelszavának (class) megadása:
+enable password cisco
+enable secret class
+
+service password-encryption

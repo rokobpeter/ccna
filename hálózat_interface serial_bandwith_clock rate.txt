@@ -1,0 +1,16 @@
+
+en
+conf t
+interface Serial0/1/0
+ip address 100.200.200.5 255.255.255.252
+bandwidth 1024
+no shutdown
+
+interface Serial0/1/1
+ip address 100.200.200.10 255.255.255.252
+bandwidth 512
+no shutdown
+exit
+
+Router(config-if)# clock rate 64000 (represented in BITS per second)
+Router(config-if)# bandwidth 64 (represented in kilobits per second)

@@ -1,0 +1,26 @@
+SSH engedélyezése:
+
+Előkészület:
+Router(config)#hostname R1
+R1(config)#ip domain-name teszt.hu
+
+Kulcs generálás:
+R1(config)#crypto key generate rsa
+
+Verzió beállítás:R1(config)#ip ssh version 1 | 2
+
+További parancsok:
+R1(config)#ip ssh time-out 60 (mp-ben megadva)
+R1(config)#ip ssh authentication-retries 2
+
+Felhasználó létrehozása beléptetéshez, csak jelszóval nem megy:
+R1(config)#username admin privilege 15 password 0 cisco
+
+Terminál port beállítása:
+R1(config)#line vty 0 15
+R1(config-line)#login local
+R1(config-line)#transport input ssh | telnet | all | none
+R1(config-line)#privilege level 15
+
+Kulcs törlése:
+R1(config)#crypto key zeroize rsa

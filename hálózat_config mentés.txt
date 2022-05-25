@@ -1,0 +1,20 @@
+Konfiguráció lekérdezése, mentése és törlése 
+
+Konfiguráció lekérdezése:
+show running-config | startup-config (RAM-ban lévő futó, és NVRAMban mentett konfiguráció)
+
+Konfiguráció mentése az NVRAM-ba:
+copy running-config startup-config 
+
+Konfiguráció mentése TFTP szerverre:
+copy running-config tftp 
+
+Konfiguráció visszatöltése TFTP szerverről:
+copy tftp running-config
+
+Konfiguráció törlése az NVRAM-ból:
+erase startup-config
+
+reload
+
+delete vlan.dat

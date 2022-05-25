@@ -1,0 +1,38 @@
+1.
+ip access-list extended pc1_pc2_tiltas
+deny tcp 195.168.55.2 255.255.255.192 195.168.55.130 255.255.255.224 
+interface f0/0
+ip access-group pc1_pc2_tiltas out
+
+
+2.
+ip access-list standard telnet_tiltas
+permit host 195.168.55.130 
+line vty 0 15
+access-class telnet_tiltas in
+
+
+1.
+ip access-list standard telnet_tiltas
+permit host 192.168.0.182
+line vty 0 15
+access-class telnet_tiltas in
+
+2. 
+ip access-list extended http_icmp_tiltas
+permit tcp host 192.168.0.2 192.168.0.128 0.0.0.31 eq 80
+permit icmp host 192.168.0.2 192.168.0.128 0.0.0.31 
+interface g0/0.15
+ip access-group http_icmp_tiltas in
+
+3. 
+ip access-list extended pc1_pc2_tiltas
+permit tcp 192.168.0.160 0.0.0.15 192.168.0.128 0.0.0.31
+interface g0/0.25
+ip access-group pc1_pc2_tiltas out
+
+4
+ip access-list extended pc0_pc3_ping_tiltas
+deny icmp host 192.168.0.2 192.168.0.180 0.0.0.3
+interface g0/0
+ip access-group pc0_pc3_ping_tiltas out

@@ -1,0 +1,92 @@
+Answers Configurations
+P2P-1
+
+enable
+configure terminal
+interface Serial0/1/1
+ ip ospf cost 50
+interface Serial0/2/0
+ ip ospf hello-interval 20
+ ip ospf dead-interval 80
+router ospf 10
+auto-cost reference-bandwidth 1000
+ network 10.0.0.0 0.0.0.3 area 0
+ network 10.0.0.8 0.0.0.3 area 0
+ network 10.0.0.12 0.0.0.3 area 0
+end
+
+P2P-2
+
+enable
+configure terminal
+router ospf 10
+ log-adjacency-changes
+ passive-interface GigabitEthernet0/0/0
+ passive-interface GigabitEthernet0/0/1
+ auto-cost reference-bandwidth 1000
+ network 10.0.0.0 0.0.0.3 area 0
+ network 10.0.0.4 0.0.0.3 area 0
+ network 192.168.1.0 0.0.0.255 area 0
+ network 192.168.2.0 0.0.0.255 area 0
+end
+
+P2P-3
+
+enable
+configure terminal
+!
+router ospf 10
+ log-adjacency-changes
+ passive-interface GigabitEthernet0/0/0
+ auto-cost reference-bandwidth 1000
+ network 10.0.0.4 0.0.0.3 area 0
+ network 10.0.0.8 0.0.0.3 area 0
+ network 192.168.3.0 0.0.0.15 area 0
+end
+
+BC-1
+
+enable
+configure terminal
+interface GigabitEthernet0/0/0
+ ip ospf priority 255
+ ip ospf 10 area 0
+interface Serial0/1/0
+ ip ospf hello-interval 20
+ ip ospf dead-interval 80
+ ip ospf 10 area 0
+router ospf 10
+ router-id 6.6.6.6
+ passive-interface Serial0/1/1
+ auto-cost reference-bandwidth 1000
+ default-information originate
+ip route 0.0.0.0 0.0.0.0 Serial0/1/1 
+end
+
+BC-2
+
+enable
+configure terminal
+interface GigabitEthernet0/0/0
+ip ospf 10 area 0
+interface GigabitEthernet0/0/1
+ip ospf 10 area 0
+router ospf 10
+ router-id 5.5.5.5
+ passive-interface GigabitEthernet0/0/0
+ auto-cost reference-bandwidth 1000
+end
+
+BC-3
+
+enable
+configure terminal
+interface GigabitEthernet0/0/0
+ip ospf 10 area 0
+interface GigabitEthernet0/0/1
+ip ospf 10 area 0
+router ospf 10
+ router-id 4.4.4.4
+ passive-interface GigabitEthernet0/0/0
+ auto-cost reference-bandwidth 1000
+end

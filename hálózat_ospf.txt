@@ -1,0 +1,44 @@
+OSPF protokoll:
+
+R1(config)#router ospf 115
+R1(config-router)#log-adjacency-changes
+R1(config-router)#network 195.220.123.0 0.0.0.255 area 0
+R1(config-router)#exit
+
+Router-azonosító megadása:
+R1(config-router)#router-id 200.0.0.1
+
+Soros összeköttetés sávszélességének megadása (kbit/s):
+R1(config-if)#bandwith 115000
+Interfész prioritásának megadása (ha 0, nem vesz részt a DR/BDR választásban):
+R1(config-if)#ip ospf priority 100
+Költségérték módosítása:
+R1(config-if)#ip ospf cost 100 (az érték 1-255 lehet)
+
+Hitelesítés jelszóval:
+R1(config-router)#area 0 authentication
+R1(config-if)#ip ospf authentication-key titok
+
+Hitelesítés MD5 segítségével:
+R1(config-router)#area 0 authentication message-digest
+R1(config-if)#ip ospf message-digest-key 1 md5 titok123
+
+Ellenőrzés:
+R1#sh ip ospf interfaceR1#sh ip ospf neighbour [detail]
+R1#debug ip ospf adj | events
+
+Hello és halott időzítők beállítása:
+R1(config-if)#ip ospf hello-interval 15
+R1(config-if)#ip ospf dead-interval 50
+
+Alapértelmezett útvonal hirdetése:
+R1(config-router)#default-information originate
+
+Összevont útvonal konfigurálása:
+R1(config-router)#area terület-azonosító range IP-cím maszk
+
+Referencia-sávszélesség értékének módosítása:
+R1(config-router)#auto-cost reference-bandwidth
+
+A módosítások érvénybe léptetése:
+R1(config-router)#clear ip ospf process

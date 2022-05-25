@@ -1,0 +1,17 @@
+Alinterface beállítás:
+
+en
+conf t
+h Router1
+int fa 0/0
+no shutdown
+no ip address
+exit
+int fa 0/0.15
+encapsulation dot1q 15
+ip address 125.125.124.65 255.255.255.224
+exit
+int fa 0/0.30
+encapsulation dot1q 30
+ip address 125.125.124.1 255.255.255.224
+exit

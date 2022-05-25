@@ -1,0 +1,1050 @@
+CISCO
+
+FORGALOMIRÁNYÍTÓK ALAPVETŐ KONFIGURÁLÁSA
+Üzemmódok:
+privilégizált felhasználói módba váltás:
+Router>enable (en), kilépés: exit
+globális konfigurációs módba váltás:
+Router#configure terminal (conf t), kilépés: exit
+speciális konfigurációs módba váltás:
+Router(config)# változó, kilépés: exit, end
+
+Állomásnév megadása:
+Router(config)#hostname R1
+
+Domain név megadás:
+R1(config)#ip domain-name teszt.hu
+
+Állomástábla:
+R1(config)# ip host R2 200.100.50.25
+
+Konzol és telnet kapcsolatok megadása:
+R1(config)#line con 0
+R1(config-line)#speed 9600
+R1(config-line)#password cisco
+R1(config-line)#login
+R1(config-line)#exit
+R1(config)#line vty 0 5 (itt 6 párhuzamos kapcsolat lehetséges, maximum 16 lehet összesen)
+R1(config-line)#password cisco
+R1(config-line)#login
+R1(config-line)#exit
+
+Privilegizált (EXEC) üzemmód titkosítatlan (cisco) és titkosított jelszavának (class) megadása:
+R1(config)#enable password cisco
+R1(config)#enable secret class
+
+Jelszó titkosítás engedélyezése (minden jelszót titkosít):
+R1(config)#service password-encryption
+
+Jelszó biztonsági megoldások megadása:
+R1(config)#security passwords min-length 10
+R1(config)#login block-for 120 attempts 5 within 60
+
+Bejelentkezési üzenet megadása:
+R1(config)#banner login # Csak hitelesített felhaszoknak! #
+
+Nap üzenete megadása:
+R1(config)#banner motd # Jó munkát! #
+Állapotüzenetek elválasztása a begépelt parancsoktól:
+R1(config-line)#logging synchronous
+Domain név feloldás tiltása:
+R1(config)#no ip domain-lookup
+
+Konfiguráció lekérdezése, mentése és törlése
+
+Konfiguráció lekérdezése:
+R1#show running-config | startup-config (RAM-ban lévő futó, és NVRAMban mentett konfiguráció)
+
+Konfiguráció mentése az NVRAM-ba:
+R1#copy running-config startup-config
+
+Konfiguráció mentése TFTP szerverre:
+R1#copy running-config tftp
+
+Konfiguráció visszatöltése TFTP szerverről:
+R1#copy tftp running-config
+
+Konfiguráció törlése az NVRAM-ból:
+R1#erase startup-config
+Ne lépjen ki engedményezett felhasználói módból:
+R1(config)#exec-timeout 0 (percben)
+
+Újraindítási parancs:
+R1#reload
+
+SSH engedélyezése:
+Előkészület:
+Router(config)#hostname R1
+R1(config)#ip domain-name teszt.hu
+Kulcs generálás:
+R1(config)#crypto key generate rsa
+Verzió beállítás:
+R1(config)#ip ssh version 1 | 2
+
+További parancsok:
+R1(config)#ip ssh time-out 60 (mp-ben megadva)
+R1(config)#ip ssh authentication-retries 2
+
+Felhasználó létrehozása beléptetéshez, csak jelszóval nem megy:
+R1(config)#username admin privilege 15 password 0 cisco
+
+Terminál port beállítása:
+R1(config)#line vty 0 15
+R1(config-line)#login local
+R1(config-line)#transport input ssh | telnet | all | none
+R1(config-line)#privilege level 15
+
+Kulcs törlése:
+R1(config)#crypto key zeroize rsa
+Privilégiumok
+privilégium létrehozása
+R1(config)#privilege interface level 2 ip address
+
+jelszó hozzárendelés:
+R1(config)#enable secret level 2 class
+belépés egy adott szintre:
+R1>enable 2
+
+Privilégium hozzárendelése kapcsolathoz:
+R1(config-line)#privilege level 2
+
+Felhasználó létrehozás és azzal való belépés (aki 15-ös szinten van, enable jelszó nélkül is erre
+a szintre kerül):
+R1(config)# username admin privilege 15 secret cisco
+R1(config)#line vty 0 15
+R1(config-line)#privilege level 15
+R1(config-line)#login local
+
+Loopback interface beállítás:
+R1(config)#interface loopback 0
+R1(config-if)# ip address 200.0.0.1 255.255.255.255
+Interfész konfiguráció IPv4 (Ethernet, soros DCE és DTE interfész):
+R1(config)#interface FastEthernet 0/0
+R1(config-if)#ip address 195.220.123.1 255.255.255.0
+R1(config-if)#description LAN-kapcsolat
+R1(config-if)#no shutdown
+R1(config-if)#exit
+R1(config)#interface Serial 0/0/0
+R1(config-if)#ip address 193.155.145.2 255.255.255.0
+R1(config-if)#description WAN-kapcsolat
+R1(config-if)#encapsulation hdlc | ppp
+R1(config-if)#clock rate 64000 (csak DCE oldalon)
+R1(config-if)#no shutdown
+R1(config-if)#exit
+
+Alinterface beállítás:
+R1(config)#int fa 0/0
+R1(config-if)#no shutdown
+R1(config-ip)#no ip address
+R1(config-if)#exit
+R1(config)#int fa 0/0.10
+R1(config-subif)#encapsulation dot1q 10
+R1(config-subif)#ip address 192.168.10.1 255.255.255.0
+R1(config-subif)#exit
+
+IPv6 beállítás interface-en:
+R1(config)#ipv6 unicast-routing
+R1(config)#int fa 0/0
+R1(config-if)#ipv6 enable
+R1(config-if)#ipv6 address 2001:470:1:1::1/64
+R1(config-if)#no shutdown
+
+vagy:
+R1(config)#ipv6 unicast-routing
+R1(config)#int fa 0/0
+R1(config-if)#ipv6 enable
+R1(config-if)#ipv6 address 2001:db8:1111:2::/64 eui-64
+R1(config-if)#no shutdown
+
+vagy:
+R1(config)#ipv6 unicast-routing
+R1(config)#int fa 0/0
+R1(config-if)#ipv6 enable
+R1(config-if)#ipv6 address dhcp | autoconfig
+R1(config-if)#no shutdown
+
+PPP hitelesítés (CHAP) (mindkét oldalon be kell állítani):
+
+Router(config)#hostname R1
+R1(config)#username masik_router password chaptitok
+R1(config)#interface Serial 0/1/0
+R1(config-if)#ip address 188.15.70.1 255.255.255.0
+R1(config-if)#encapsulation ppp
+R1(config-if)#ppp authentication chap
+R1(config-if)#no shutdown
+
+PPP hitelesítés (PAP) (egy oldalon is hitelesíthető):
+Router(config)#hostname R1
+R1(config)#username masik_router password paptitok
+R1(config)#interface Serial 0/1/0
+R1(config-if)#ip address 188.15.70.1 255.255.255.0
+R1(config-if)#encapsulation ppp
+R1(config-if)#ppp authentication pap
+R1(config-if)#ppp pap sent-username R1 password paptitok
+R1(config-if)#no shutdown
+
+Proxy ARP tiltása az interface-en
+R1(config-if)# no ip proxy-arp
+
+DHCP szerver beállítása:
+R1(config)#ip dhcp pool lan1
+R1(config-dhcp)#network 192.168.0.0 255.255.255.0
+R1(config-dhcp)#default-router 192.168.0.1
+R1(config-dhcp)#dns-server 1.2.3.4
+R1(config-dhcp)#lease 1 12 30 (nap óra perc formátum)
+R1(config-dhcp)#domain-name teszt.hu
+R1(config-dhcp)#option 150 ip 192.168.0.1 (IP telefonnál a tftp szerver címe, innen jön a config)
+R1(config)#ip dhcp excluded-address 192.168.0.1 192.168.0.10
+
+IP cím kötése MAC címhez
+Router(config)#ip dhcp pool FIXIP
+Router(dhcp-config)#host 200.20.2.20 255.255.255.0
+Router(dhcp-config)#hardware-address 01b7.0813.8811.66
+Ha a DHCP szerver másik hálózati szegmensen van, akkor a DHCP DISCOVER-t fogadó interfészen meg kell adni a DHCP szerver címét:
+R1(config-if)# ip helper-address 192.168.10.1
+
+Frame-Relay beállítása:
+R1(config-if)#encapsulation frame-relay [ ietf ]
+R1(config-if)#bandwidth 128 (kbit/sec értékben)
+R1(config-if)#frame-relay lmi-type cisco | ansi | q933a
+R1#show frame-relay map | pvc | lmi
+
+Alinterfészek létrehozása:
+
+Pont-pont (2-2 router van azonos alhálózaton):
+R1(config)# int s0/0/0
+R1(config-if)#encap frame-relay
+R1(config-if)#no ip address
+R1(config)#int s0/0/0.102 point-to-point
+R1(config-if)#ip address x.y
+R1(config-if)#frame-relay interface-dlci 102
+
+Multipoint (több router is azonos alhálózaton van):
+R1(config)# int s0/0/0
+R1(config-if)#encap frame-relay
+R1(config-if)#no ip address
+R1(config)#int s0/0/0.1 multipoint
+R1(config-if)#ip address x.y
+R1(config-if)#frame-relay interface-dlci 102
+R1(config-if)#frame-relay interface-dlci 103
+
+FORGALOMIRÁNYÍTÁS
+
+IP útválasztás engedélyezése IPv4:
+R1(config)#ip routing
+
+Statikus útvonalak IPv4:
+R1(config)#ip route 192.168.52.0 255.255.255.0 192.168.1.2 | ser 0/0/0
+
+Lebegő statikus útvonal IPv4:
+R1(config)#ip route 10.0.0.0 255.255.255.0 ser 0/0/0 150
+
+Alapértelmezett út megadása IPv4:
+R1(config)# ip route 0.0.0.0 0.0.0.0 köv_ugrás ip címe | kiküldő interface
+IPv6 statikus útvonal megadása:
+R1(config)#ipv6 route 2001:470:1:1::/64 ser 0/0/0 | 2001:470:1:2::1
+IPv6 lebegő statikus útvonal megadása:
+R1(config)#ipv6 route 2001:470:1:1::/64 ser 0/0/0 151
+IPv6 alapértelmezett útvonal megadása:
+R1(config)#ipv6 route ::/0 ser 0/0/0
+
+RIP protokoll:
+R1(config)#router rip
+R1(config-router)#no auto-summary
+R1(config-router)#network 195.220.123.0
+Ha egy interfészen nem akarunk küldeni frissítéseket, csak fogadni:
+R1(config-router)#passive-interface Fa0/0
+
+Nem osztályos címeknél:
+R1(config-router)#version 2
+RIP verzió beállítás interface-en:
+R1(config-if)#ip rip send version 2 (küldés v2-ben)
+R1(config-if)#ip rip receive version 2 (fogadás v2-ben)
+RIP alapértelmezett út hirdetése:
+R1(config-router)#default-information originate
+
+Hitelesítés beállítása:
+R1(config)#key chain Kulcs
+R1(config-keychain)#key 1
+R1(config-keychain-key)#key-string jelszo
+R1(config)#int fa 0/0
+R1(config-if)#ip rip authentication key-chain Kulcs
+R1(config-if)#ip rip authentication mode md5
+
+Látóhatár megosztás engedélyezése
+R1(config-if)# ip split-horizon
+RIP időzítők beállítása
+R1(config-router)# timers basic 5 15 15 30
+
+OSPF frissítés RIP frissítéssé alakítása
+R1(config)#router rip
+R1(config-router)#redistribute ospf 1 metric 3
+
+EIGRP frissítés RIP frissítéssé alakítása
+R1(config)#router rip
+R1(config-router)#redistribute eigrp 100 metric 3
+
+RIPng protokoll:
+R1(config)#int fa 0/0
+R1(config-if)#ipv6 rip CISCO enable
+
+EIGRP protokoll:
+Alapbeállítás:
+R1(config)#router eigrp 111
+R1(config-router)#no auto-summary
+R1(config-router)#network 192.168.1.0 maszk nélkül
+R1(config-router)#network 200.0.0.0 255.255.255.252 rendes maszkkal
+R1(config-router)#network 201.1.1.0 0.0.0.3 fordított maszkkal
+
+Alapértelmezett útvonal hirdetése:
+R1(config-router)#redistribute static
+Passzív interfész beállítása
+R1(config-router)#passive-interface Fa 0/0
+
+Nem egyenlő költségű útvonalakon való terheléselosztás:
+R1(config-router)#variance 5
+(ekkor a legjobb útvonalnál 5-ször rosszabb költségű útvonalakat is bevonja az irányítótáblába)
+
+Közvetlenül kapcsolódó hálózatok bevonása az irányítási folyamatba (ezekbe nem küld EIGRP csomagokat):
+R1(config-router)#redistribute connected
+
+A szomszédsági viszonyok változásainak követése
+R1(config-router )#eigrp log-neighbor-changes
+
+Soros összeköttetések sávszélessége
+R1(config-if)#bandwith 1544
+
+Hello időzítő értékének módosítása (default: T1< and NBMA = 60s T1> = 5s)
+R1(config-if)#ip hello-interval eigrp 1 10
+
+Halott időzítő értékének módosítása (default: T1< and NBMA = 180s T1> = 15s)
+R1(config-if)#ip hold-time eigrp 1 10
+
+Útvonalösszevonás:
+R1(config-if)#ip summary-address eigrp 111 192.168.0.0 255.255.0.0
+
+Hitelesítés beállítása:
+R1(config)#key chain Kulcs
+R1(config-keychain)#key 1
+R1(config-keychain-key)#key-string jelszo
+R1(config)#int fa 0/0
+R1(config-if)#ip authentication key-chain eigrp 1 Kulcs
+R1(config-if)#ip authentication mode eigrp 1 md5
+
+Ellenőrző parancsok:
+R1#show ip eigrp neighbors
+R1#show ip eigrp topology [all-links]
+R1#debug eigrp fsm | packets
+
+RIP frissítés EIGRP frissítéssé alakítása [sávszélesség|késleltetés|megbízhatóság|Terhelés|MTU]
+R1(config)#router eigrp 100
+R1(config-router)#redistribute rip metric 128 1000 100 100 100
+
+OSPF frissítés EIGRP frissítéssé alakítása [sávszélesség|késleltetés|megbízhatóság|Terhelés|MTU]
+R1(config)#router eigrp 100
+R1(config-router)#redistribute ospf 1 metric 128 1000 100 100 100
+
+OSPF protokoll:
+
+R1(config)#router ospf 115
+R1(config-router)#log-adjacency-changes
+R1(config-router)#network 195.220.123.0 0.0.0.255 area 0
+R1(config-router)#exit
+
+Router-azonosító megadása:
+R1(config-router)#router-id 200.0.0.1
+
+Soros összeköttetés sávszélességének megadása (kbit/s):
+R1(config-if)#bandwith 115000
+
+Interfész prioritásának megadása (ha 0, nem vesz részt a DR/BDR választásban):
+R1(config-if)#ip ospf priority 100
+
+Költségérték módosítása:
+R1(config-if)#ip ospf cost 100 (az érték 1-255 lehet)
+
+Hitelesítés jelszóval:
+R1(config-router)#area 0 authentication
+R1(config-if)#ip ospf authentication-key titok
+
+Hitelesítés MD5 segítségével:
+R1(config-router)#area 0 authentication message-digest
+R1(config-if)#ip ospf message-digest-key 1 md5 titok123
+
+Ellenőrzés:
+R1#sh ip ospf interface
+R1#sh ip ospf neighbour [detail]
+R1#debug ip ospf adj | events
+
+Hello és halott időzítők beállítása:
+R1(config-if)#ip ospf hello-interval 15
+R1(config-if)#ip ospf dead-interval 50
+
+Alapértelmezett útvonal hirdetése:
+R1(config-router)#default-information originate
+
+Összevont útvonal konfigurálása:
+R1(config-router)#area terület-azonosító range IP-cím maszk
+
+Referencia-sávszélesség értékének módosítása:
+R1(config-router)#auto-cost reference-bandwidth
+
+A módosítások érvénybe léptetése:
+R1(config-router)#clear ip ospf process
+RIP frissítés OSPF frissítéssé alakítása:
+R1(config-router)#redistribute rip subnets
+
+EIGRP frissítés OSPF frissítéssé alakítása:
+R1(config)#router ospf 1
+R1(config-router)#redistribute eigrp 10 subnets
+
+OSPFv3 protokoll alapbeállítása:
+R1(config)#ipv6 router ospf 1
+R1(config-rtr)#router-id 1.1.1.1 ez nem ip cím, hanem process azonosító
+R1(config-rtr)#exit
+R1(config)#int fa 0/1
+R1(config-if)#ipv6 ospf 1 area 0
+
+BGP protokoll alapbeállítása
+R1(config)# router bgp 100
+szomszéd forgalomirányító
+R1(config-router)#neighbor 10.10.10.10 remote-as 100
+
+belső útvonal hirdetés:
+R1(config-router)#network 172.16.0.0
+
+Adminisztratív távolságok
+
+FORGALOMIRÁNYTÓK HALADÓ BEÁLLÍTÁSAI
+Hozzáférési (ACL, Access Control List) listák megadása
+
+Normál ACL szintaktika:
+R1(config)#access-list szám permit|deny host_ip|ip_tartomány wildcard maszkja
+
+Normál ACL a 193.225.10.0/24 célhálózathoz enged:
+R1(config)#access-list 1 permit 193.225.10.0 0.0.0.255
+
+Normál ACL egy számítógép tiltásához:
+R1(config)#access-list 1 deny host 195.140.100.5
+
+Kiterjesztett ACL szintaktikája:
+R1(config)#access-list szám permit|deny protokoll forrás_ip reverse-maszk cél_ip reverse-maszk
+[eq port [established]]
+A példában tiltjuk a 195.220.0.0/16 hálózat felől a HTTP (80-as port) kéréseket bármilyen célhálózat felé:
+R1(config)#access-list 101 deny tcp 195.220.0.0 0.0.255.255 0.0.0.0 0.0.0.0 eq 80
+
+Portok megadásához használhatók:
+eq ha egy portot adunk meg (equal)
+ne ha nem azt a portot akarjuk (not equal)
+lt ha megadott portnál kisebbeket akarjuk
+gt ha megadott portnál nagyobbakat akarjuk
+range x to y ha portszámok tartományát akarjuk
+
+Nevesített ACL:
+R1(config)#ip access-list standard ACL-IN
+R1(config)#ip access-list extended ACL-OUT
+R1(config-ext-nacl)#permit icmp any any
+Az ACL definiálása után az ACL-t interfészhez kell rendelni. Fontos megadni, hogy kimenő vagy
+bejövő interfészhez rendeljük-e!
+R1(config)#interface Serial 0/0/0
+R1(config-if)#ip access-group 1 out
+
+ACL leírás megadása:
+R1(config)#access-list 1 remark ez tilt mindent
+
+WEB kiszolgáló engedélyezése:
+R1(config)#ip http server
+R1(config)#ip http secure-server
+R1(config)#ip http authentication local
+
+Címfordítás beállítása a forgalomirányítókon (NAT, DNAT, PAT):
+A belső oldalhoz tartozó interfész megjelölése:
+R1(config)#interface Fastethernet 0/0
+R1(config-if)#ip nat inside
+
+A külső oldalhoz tartozó interfész megjelölése:
+R1(config)#interface serial 0/0/0
+R1(config-if)#ip nat outside
+Statikus NAT (egy belső címet egy külső címre):
+R1(config)# ip nat inside source static 10.10.10.1 209.21.34.11
+
+Dinamikus NAT:
+R1(config)#ip nat pool public_access 209.165.200.242 209.165.200.253 netmask 255.255.255.224
+R1(config)#access-list 1 permit 192.168.123.0 0.0.0.255
+R1(config)#ip nat inside source list 1 pool public_access
+A PAT szabály megadása globális konfigurációs módban:
+R1(config)#ip nat inside source list 1 interface Serial 0/0/0 overload
+
+Alapértelmezett útvonal megadása a külvilág eléréséhez:
+R1(config)#ip route 0.0.0.0 0.0.0.0 ser 0/0/0
+
+Syslog naplózás
+R1(config)#logging on
+R1(config)#logging host 192.168.1.10
+R1(config)#logging trap information
+R1(config)#logging facility local7
+R1(config)#logging source-interface fa0/0
+R1(config)#service timestamps log datetime localtime show-timezone msec
+
+Konzolra naplózás
+R1(config)#logging console information
+Memóriába naplózás
+R1(config)#logging buffered 16000 information
+Terminálra naplózás
+R1(config)#logging monitor information
+R1(config)#terminal monitor
+LOG bejegyzés készítése a privilegizált módhoz
+R1(config)#logging userinfo
+LOG bejegyzés készítése a felhasználó bejelentkezéséhez
+R1(config)#login on-failure log
+R1(config)#login on-success log
+vagy
+R1(config)#security authentication failure rate 8 log
+
+Loggolás lekérdezése
+R1#show logging
+
+Kis szolgáltatások tiltása:
+R1(config)#no service tcp-small-service
+R1(config)#no service udp-small-service
+
+NTP (Hálózati idő protokoll)
+
+Idő lekérdezése
+R1#show clock detail
+
+Idő beállítása
+R1(config)#clock timezone GMT +1
+R1(config)#clock summer-time GMT recurring
+R1#clock set 10:50:00 26 Oct 2011
+
+NTP szerver megadása
+R1(config)#ntp server 10.10.10.1
+R1(config)#ntp update-calendar
+R1(config)#ntp master
+R1(config)#ntp broadcast client
+R1(config)#ntp source FastEthernet0/0
+
+NTP hitelesítés beállítása
+R1(config)# ntp authentication-key 42 md5 cisco
+R1(config)# ntp trusted-key 42
+R1(config)# ntp authenticate
+
+NTP beállítások lekérdezése
+R1#show ntp status
+R1#show ntp associations
+
+SNMP
+Community string beállítása csak olvashatóra
+R1(config)#snmp-server community public ro
+Community string beállítása írható-olvashatóra
+R1(config)#snmp-server community topsecret rw
+
+További paraméterek beállítása
+R1(config)#snmp-server location ceg.hu
+R1(config)#snmp-server contact admin
+Újraindítás engedélyezése
+R1(config)#snmp-server system-shutdown
+
+SHOW parancsok:
+R1#show running-config RAM-ban lévő futó konfiguráció megjelenítése
+R1#show startup-config NVRAM-ban tárolt konfiguráció megjelenítése
+R1#show interfaces Interfészek állapotainak megjelenítése
+R1#show ip route IP útválasztó tábla megjelenítése
+R1#show access-lists ACL listák megjelenítése
+R1#show ip interface IP alapú interfész protokoll beállítások megjelenítése
+R1#show ip protocols Aktív irányító protokollok állapotait jeleníti meg
+R1#show version Szoftver és hardver verzió információk
+R1#show cdp neighbors CDP protokoll által felfedezett szomszédos forgalomirányító adatainak megjelenítése
+R1#show ip nat translations IP NAT alapú címfordítással kapcsolatos információk megjelenítése
+R1#show ip dhcp binding DHCP szerver által kiadott címek adatai
+
+CDP
+CDP globális engedélyezés:
+R1(config)#cdp run
+
+CDP engedélyezése interface-en:
+R1(config-if)#cdp enable
+
+CDP show parancsai:
+R1(config)#show cdp
+R1(config)#show cdp neighbors
+R1(config)#show cdp neighbors detail
+R1(config)#show cdp entry hostnév
+
+RADIUS-os hitelesítés beállítása:
+Router(config)#aaa new-model
+Router(config)#radius-server host 1.1.1.1 key class
+Router(config)#aaa authentication login default group radius local
+Router(config)#line vty 0 4
+Router(config-line)#login authentication default
+
+NAT-PT beállítás:
+Statikus (egy ipv4-et egy ipv6-ra fordít vagy épp ellenkezőleg):
+R1(config-if)#ipv6 nat /minden NAT-PT-be bevont interface-en
+R1(config)#ipv6 nat v4v6 source 192.168.1.254 2001::254
+R1(config)#ipv6 nat prefix 2001::/96
+R1(config)#ipv6 nat v6v4 source 2001:a:b:c::1 126.12.12.12
+
+GRE Tunneling:
+R1(config)# interface Tunnel1
+R1(config-if)# ip address 172.16.1.1 255.255.255.0 (logikai interface cím)
+R1(config-if)# ip mtu 1400
+R1(config-if)# ip tcp adjust-mss 1360
+R1(config-if)# tunnel source 1.1.1.1 (fizikai interface címe ezen az eszközön vagy interface)
+R1(config-if)# tunnel destination 2.2.2.2 (fizikai interface címe a logikailag szomszéd eszközön)
+
+FHRP (First Hop Redundancy Protocol) beállítás
+
+HSRP
+R1(config)# int ser 0/0/0
+R1(config-if)# ip add 10.0.0.20 255.255.255.0
+R1(config-if)# standy version 2
+R1(config-if)# standby 1 ip 10.0.0.1
+R1(config-if)# standby 1 priority 110 (alapértelmezett 100)
+R1(config-if)# standby 1 name HSRP-example
+R2(config)#int ser 0/0/0
+R2(config-if)# ip add 10.0.0.30 255.255.255.0
+R2(config-if)# standy version 2
+R2(config-if)# standby 1 ip 10.0.0.1
+R2(config-if)# standby 1 name HSRP-example
+
+GLBP
+R1(config)# int ser 0/0/0
+R1(config-if)# ip add 10.0.0.20 255.255.255.0
+R1(config-if)# glbp 1 ip 10.0.0.1
+R1(config-if)# glbp 1 priority 110
+R1(config-if)# glbp 1 name GLBP-example
+R2(config)#int ser 0/0/0
+R2(config-if)# ip add 10.0.0.30 255.255.255.0
+R2(config-if)# glbp 1 ip 10.0.0.1
+R2(config-if)# glbp 1 name GLBP-example
+
+VIRTUÁLIS MAGÁN HÁLÓZATOK
+
+VPN PPTP protokoll használatával
+
+Virtual Private Dialup Network engedélyezése
+R1(config)#vpdn enable
+
+Virtual Private Dialup Network létrehozása
+R1(config)#vpdn-group 1
+R1(config-vpdn)#accept-dialin
+R1(config-vpdn-acc-in)#protocol pptp
+R1(config-vpdn-acc-in)#virtual-template 1
+
+Virtuális interfész valós interfészhez kötése
+R1(config)#interface Virtual-Template1
+R1(config-if)#ip unnumbered FastEthernet 0/0
+R1(config-if)#peer default ip address pool PPTP-Pool
+R1(config-if)#no keepalive
+R1(config-if)#ppp encrypt mppe 128
+R1(config-if)#ppp authentication ms-chap ms-chap-v2
+
+Helyi hálózaton használható IP címek megadása
+R1(config)#ip local pool PPTP-Pool 192.168.0.20 192.168.0.25
+
+VPN felhasználó létrehozása
+R1(config)#username user1 password cisco
+
+VPN L2TP over IPSec használatával
+
+Virtual Private Dialup Network engedélyezése
+R1(config)#vpdn enable
+
+Virtual Private Dialup Network létrehozása
+R1(config)#vpdn-group 1
+R1(config-vpdn)#no l2tp tunnel authentication
+R1(config-vpdn)#accept-dialin
+R1(config-vpdn-acc-in)#protocol l2tp
+R1(config-vpdn-acc-in)#virtual-template 1
+
+Virtuális interfész valós interfészhez kötése
+R1(config)#interface Virtual-Template1
+R1(config-if)#ip unnumbered FastEthernet0/0
+R1(config-if)#peer default ip address pool L2TP-Pool
+R1(config-if)#ppp authentication ms-chap-v2
+
+Helyi hálózaton használható IP címek megadása
+R1(config)#ip local pool L2TP-Pool 192.168.0.20 192.168.0.25
+
+Hitelesítés beállítása
+R1(config)#crypto isakmp policy 10
+R1(config-isakmp)#encryption 3des
+R1(config-isakmp)#authentication pre-share
+R1(config-isakmp)#group 2
+R1(config-isakmp)#lifetime 3600
+
+IPSec előre megosztott kulcs megadása
+R1(config)#crypto isakmp keepalive 3600
+R1(config)#crypto isakmp key cisco address 0.0.0.0 0.0.0.0 no-xauth
+
+IPSec beállítás
+R1(config)#crypto ipsec transform-set MySet esp-3des esp-sha-hmac
+R1(cfg-crypto-trans)#mode transport
+R1(config)#crypto dynamic-map MyMap 10
+R1(config-crypto-map)#set transform-set MySet
+R1(config)#crypto map L2TP-Map 10 ipsec-isakmp dynamic MyMap
+R1(config)#interface FastEthernet0/0
+R1(config-if)#crypto map L2TP-Map
+
+VPN felhasználó létrehozása
+R1(config)#username user1 password cisco
+
+Site-to-Site VPN IPSec
+ISAKMP konfiguráció
+
+R1(config)#crypto isakmp policy 6
+
+Hitelesítés
+R1(config-isakmp)#authentication pre-share
+
+Diffie-Hellman csoport
+R1(config-isakmp)#group 5
+Kivonatoló algoritmus
+R1(config-isakmp)#hash md5
+Titkosítás
+R1(config-isakmp)#encr 3des
+Az SA élettartama
+R1(config-isakmp)#lifetime 3600
+Közös titkos kulcs és másik végpont megadása
+R1(config)#crypto isakmp key Secret address 200.20.2.1
+IPSec globális SA élettartamának konfigurálás
+R1(config)#crypto ipsec security-association lifetime seconds 86400
+
+Crypto ACL konfigurálása
+R1(config)#access-list 100 permit ip 192.168.0.0 0.0.255.255 10.0.0.0 0.255.255.255
+
+Transzform set beállítása
+R1(config)#crypto ipsec transform-set SETNAME esp-3des esp-md5-hmac
+Crypto map konfigurlása
+R1(config)#crypto map MAPNAME PRIORITY ipsec-isakmp
+Társ végpont
+R1(config-crypto-map)#set peer 200.20.2.1
+Transzform set megadása
+R1(config-crypto-map)#set transform-set SETNAME
+DH group hozzárendelése
+R1(config-crypto-map)#set pfs group5
+Crypto ACL hozzárendelése
+R1(config-crypto-map)#match address 100
+Crypto map hozzárendelése VPN végpont interfészhez
+R1(config-if)#crypto map MAPNAME
+IPSEC VPN (Packet Tracer-ben működő)
+
+VPN felhasználó létrehozása
+R1(config)#username vpnuser password cisco
+
+Csoport hozzáadása
+R1(config)#aaa new-model
+R1(config)#aaa authentication login default local
+R1(config)#aaa authorization network default local
+
+Csoport hozzáadása Radius hitelesítés esetén
+R1(config)#aaa authentication login default group radius local
+R1(config)#aaa authorization network default group radius local
+R1(config)#radius-server host 172.16.1.1 auth-port 1645 key cisco
+Helyi hálózaton használható IP címek megadása (ezek lesznek kiosztva)
+R1(config)#ip local pool VPN-Pool 192.168.0.20 192.168.0.25
+
+Hitelesítés beállítása
+R1(config)#crypto isakmp policy 10
+R1(config-isakmp)#encryption 3des
+R1(config-isakmp)#authentication pre-share
+R1(config-isakmp)#group 2
+R1(config-isakmp)#lifetime 3600
+
+IPSec csoport létrehozása és konfigurálása
+R1(config)#crypto isakmp client configuration group vpncsoport
+R1(config-isakmp-group)#key cisco123
+R1(config-isakmp-group)#netmask 255.255.255.0
+R1(config-isakmp-group)#pool VPN-Pool
+
+IPSec beállítás
+R1(config)#crypto ipsec transform-set MySet esp-3des esp-sha-hmac
+R1(config)#crypto dynamic-map MyMap 10
+R1(config-crypto-map)#set transform-set MySet
+R1(config-crypto-map)#reverse-route
+R1(config)#crypto map VPN-Map client authentication list default
+R1(config)#crypto map VPN-Map client configuration address respond
+R1(config)#crypto map VPN-Map isakmp authorization list default
+R1(config)#crypto map VPN-Map 10 ipsec-isakmp dynamic MyMap
+R1(config)#interface FastEthernet0/0
+R1(config-if)#crypto map VPN-Map
+
+IOS KEZELÉS
+Súgó használata:
+? kilistázza az összes, adott üzemmódban használható parancsot
+show ? kilistázza a show parancs paramétereit
+sh? kilistázza az összes sh-val kezdődő parancsot
+Mentés TFTP szerverre:
+Router#copy flash tftp
+Másolás (frissítés) TFTP szerverről:
+Router#copy tftp flash
+Ha több IOS van a Flash-ben, megadható, melyiket indítsa legközelebb:
+Router(config)# boot system flash c1841-advipservicesk9-mz.124-15.bin
+IOS frissítés ROM monitor módban:
+rommon 1> IP_ADDRESS=171.68.171.0
+rommon 2> IP_SUBNET_MASK=255.255.254.0
+rommon 3> DEFAULT_GATEWAY=171.68.170.3
+rommon 4> TFTP_SERVER=171.69.1.129
+rommon 5> TFTP_FILE=c2600-is-mz.113-2.0.3.Q
+rommon 6> tftpdnld
+A megjelenő információk alapján környezeti változókkal kell beállítani a router IP adatait (a
+legkisebb sorszámú FastEthernet interfészre értendő), valamint a TFTP szerver adatait, majd
+ezután adjuk ki a tftpdnld parancsot.
+
+JELSZÓVISSZAÁLLÍTÁS:
+Routeren:
+• Bekapcsolás után röviddel a HyperTerminálban CTRL+Break megnyomása -> rommonitor mód
+• confreg 2142
+• boot
+• a router betölti az IOS-t és átlépi az indító konfigurációs fájlt, ezután beléphetünk enable módba,
+majd globális konfigba
+• Router(config)#copy start run
+• Router(config)#enable secret sajatjelszo
+• Router(config)#config-register 0x2102
+• Router(config)#copy run start
+• Újraindítás után az eredeti konfigurációval, de már az új jelszóval indul
+Switch-en:
+• Bekapcsolás után röviddel folyamatosan nyomni kell a Mode gombot, míg folyamatos zölden nem
+világít, ekkor elengedni
+• A csökkentett üzemmódban ki kell adni először a flash_init, majd a load_helper parancsot
+• A flash-ben lévő config.text fájlt át kell nevezni, hogy ne találja meg az IOS:
+rename flash:config.text flash:c.text
+• boot parancs kiadása után a switch betölti az IOS-t, be tudunk lépni globális konfig módba:
+switch(config)#copy flash:c.txt running-config
+switch(config)#enable secret sajatjelszo
+switch(config)#do copy run start
+• Újraindítás után az eredeti konfigurációval, de már az új jelszóval indul
+
+KAPCSOLÓK KONFIGURÁLÁSA
+Üzemmódok:
+privilégizáltba váltás: enable (en), kilépés: disable
+globális konfigurációsba váltás: configure terminal (conf t), kilépés: exit
+speciális konfigurációsba váltás: változó, kilépés: exit, end
+Súgó használata:
+? kilistázza az összes, adott üzemmódban használható parancsot
+show ? kilistázza a show parancs paramétereit
+sh? kilistázza az összes sh-val kezdődő parancsot
+
+Konfiguráció mentése:
+Switch# copy run start
+
+Állomásnév beállítása:
+Switch(config)# hostname kapcsolo_neve
+
+Konzoljelszó beállítása:
+Switch(config)# line console 0
+Switch(config-line)# password jelszo
+Switch(config-line)# login
+
+Virtuális terminálok jelszavainak beállítása:
+Switch(config)# line vty 0 15
+Switch(config-line)# password jelszo
+Switch(config-line)# login
+
+Állapotüzenetek elválasztása a begépelt parancsoktól:
+Switch(config-line)#logging synchronous
+Lokális felhasználó létrehozása nem titkosított és titkosított jelszóval:
+Switch(config)#username admin password cisco
+Switch(config)#username boss secret class
+
+Belépés lokális felhasználóval terminálról, meghatározott módszerrel:
+Switch(config)# line vty 0 4
+Switch(config)# login local
+Switch(config)# transport input all | telnet | ssh | none
+Enable jelszó (titkosítatlan és titkosított) beállítása:
+Switch(config)# enable password jelszo
+Switch(config)# enable secret jelszo
+
+Jelszótitkosítás bekapcsolása:
+Switch(config)# service passwod-encryption
+
+Napi üzenet beállítása (elválasztó karakter pl. a # ):
+
+Switch(config)# banner motd #Belepes csak engedellyel!#
+Switch portok beállítása (sebesség, duplexitás):
+Switch(config)#interface FastEthernet 0/2
+Switch(config-if)#duplex auto | half | full
+Switch(config-if)#speed auto | 10 | 100 | 1000
+
+MAC-cím statikus megadása adott porthoz:
+Switch(config)#mac-address-table static 0123.4567.89AB vlan 1 int fa0/1
+MAC-címtábla törlése:
+Switch#clear mac-address-table dynamic
+
+Portbiztonság konfigurálása:
+Switch(config)#int fa0/1
+Switch(config-if)#switchport mode access
+Switch(config-if)#switchport port-security
+Switch(config-if)#switchport port-security mac-address sticky
+
+vagy általunk megadott címmel:
+Switch(config-if)#switchport port-security mac-address 0123.4567.89AB
+Switch(config-if)#switchport port-security violation shutdown
+
+ha nem szeretnénk, hogy letiltson:
+Switch(config-if)#switchport port-security violation [ protect | restrict ]
+
+vagy ha maximum 2 MAC címet engedünk:
+Switch(config-if)#switchport port-security mac-address maximum 2
+
+Portbiztonság miatt letiltott port újraengedélyezése:
+Switch(config)#int fa0/1
+Switch(config-if)#shutdown
+Switch(config-if)#no shut
+
+DHCP Snooping
+DHCP Snooping globális engedélyezése
+Switch(config)#ip dhcp snooping
+DHCP Snooping engedélyezés VLAN-okra
+Switch(config)#ip dhcp snooping vlan 1
+Megbízható port kijelölése
+Switch(config)#ip dhcp snooping trust
+Nem megbízható porton a DHCP kérések limitje
+Switch(config)#ip dhcp snooping limit rate 10
+Porthoz leírás, megjegyzése fűzése:
+Switch(config)#int fa0/24
+Switch(config-if)#description Kapcsoloport a szerverhez
+Alapértelmezett átjáró megadása:
+Switch(config)#ip default-gateway 10.0.0.254
+Domain szerver megadása:
+Switch(config)#ip name-server 10.1.1.1
+Felügyeleti IP-cím adása a kapcsolónak (itt VLAN 1 a felügyeleti VLAN):
+Switch(config)#int vlan 1
+Switch(config-if)#ip address 10.0.0.1 255.0.0.0
+Switch(config-if)#no shut
+
+Állomástábla összeállítása (ellenőrzése: show hosts):
+Switch(config)#ip host alfa 10.0.0.1
+VLAN-ok létrehozása:
+
+Első módszer:
+Switch#vlan database
+Switch(vlan)#vlan 10 name alfa
+
+Második módszer:
+Switch(config)#vlan 25
+Switch(config-vlan)#name gamma
+Portok hozzárendelése adott VLAN-hoz:
+Switch(config)#int fa0/1
+Switch(config-if)#switchport mode access
+Switch(config-if)#switchport access vlan 25
+
+Egyszerre több port hozzárendelése:
+Switch(config)#int range fa0/10 - 15
+Switch(config-if-range)#switchport mode access
+Switch(config-if-range)#switchport access vlan 25
+
+Trönkport beállítása:
+Switch(config)#int fa0/24
+Switch(config-if)#switchport mode trunk
+Natív VLAN beállítása (a trönk mindkét végén meg kell adni!):
+Switch(config-if)#switchport trunk native vlan 99
+Engedélyezett VLAN-ok megadása a trönkön:
+Switch(config-if)#switchport trunk allowed vlan [ except 2 | 3,4 | all ]
+
+Trönk állapotának ellenőrzése:
+Switch# show interfaces trunk
+Futó konfiguráció mentése TFTP-szerverre:
+Switch#copy running-config tftp
+
+Indító konfiguráció letöltése TFTP-szerverről:
+Switch#copy tftp startup-config
+
+Spanning Tree Protocol (STP)
+Hídprioritás beállítása (az érték 0-61440 között lehet, 4096-os lépésekkel, a kisebb lesz a
+gyökérponti híd):
+Switch(config)#spanning-tree vlan 1 priority 4096 illetve:
+Switch(config)#spanning-tree vlan 1 root [ primary | secondary ]
+
+Hozzáférési portok gyors-továbbító üzemmódba állítása:
+Switch(config)#spanning-tree portfast default
+illetve interfészenként:
+Switch(config-if)#spanning-tree portfast
+A kialakult állapot megjelenítése:
+Switch# show spanning-tree [detail | summary | vlan x ]
+Üzemmód beállítása (normál / gyors)
+Switch(config)#spanning-tree mode pvst | rapid-pvst
+
+Interface költség beállítás:
+Switch(config-if)#spanning-tree vlan 10 cost 30
+Alapértelmezett értékek: 10Mbps=100; 100Mbps=19; 1Gbps=4; 10Gbps=2
+Root guard (hogy a gyökérponti kapcsoló ne változzon a hálózaton):
+Switch(config)#spanning-tree guard root
+Loop guard engedélyezése globálisan:
+Switch(config)#spanning-tree loopguard default
+
+BPDU guard engedélyezése globálisan (hogy bármilyen portról ne fogadjon bpdu-t):
+Switch(config)#spanning-tree portfast bpduguard default
+illetve adott hozzáférési porton:
+Switch(config-if)#spanning-tree bpduguard enable
+EtherChannel guard (EtherChannel hibák ellenőrzésére):
+Switch(config)#spanning-tree etherchannel guard misconfig
+VTP (VLAN trönkprotokoll) konfigurálása:
+
+Első módszer (switchportot is támogató routereken csak ez működik):
+Switch# vlan database
+Switch(vlan)# vtp domain tartománynév
+Jelszó beállítása:
+Switch(vlan)#vtp password jelszó
+Protokoll verziójának beállítása:
+Switch(vlan)# vtp v2-mode
+Eszköz üzemmódjának beállítása (alapesetben szerverként működik, a kliens csak fogadja a
+módosításokat, a transzparens átengedi a VTP-t és tőle függetlenül működtethet saját VLAN-okat):
+Switch(vlan)# vtp mode server | client | transparent
+
+Második módszer (globális konfig módban működik):
+Switch(config)# vtp domain tartománynév
+Switch(config)# vtp password jelszó
+Switch(config)# vtp version 2
+Switch(config)# vtp mode server | client | transparent
+
+VTP ellenőrzése:
+Switch# show vtp status
+Switch# show vtp password
+
+VTP pruning:
+A kapcsolók nem továbbítják a trönk túlsó felére olyan VLAN-ok adatait, amikbe tartozó állomások
+nem léteznek a túloldalon, ezáltal kisebb lesz a fölösleges hálózati forgalom.
+Switch(config)# vtp pruning
+
+EtherChannel konfigurálás:
+manuális EtherChannel:
+Switch(config-if)#channel-group 1 mode on
+EtherChannel PagP-vel:
+Switch(config-if)#channel-group 1 mode desirable | auto
+EtherChannel LACP-vel:
+Switch(config-if)#channel-group 1 mode active | passive
+Multilayer Kapcsolók beállításai:
+forgalomirányítás bekapcsolása:
+Switch(config)#ip routing
+Port felkészítése a forgalomirányításra:
+Switch(config-if)no switchport (ezután be lehet állítani IP címeket)
+
+IPv4
+Osztály Teljes tartomány Alapértelmezett
+maszk
+Privát tartomány
+A 0.0.0.0 –
+127.255.255.255 255.0.0.0 10.0.0.0 –
+10.255.255.255
+B 128.0.0.0 –
+191.255.255.255 255.255.0.0 172.16.0.0 –
+172.31.255.255
+C 192.0.0.0 –
+223.255.255.255 255.255.255.0 192.168.0.0 –
+192.168.255.255
+D 224.0.0.0 –
+239.255.255.255 - -
+E 240.0.0.0 –
+255.255.255.255 - -
+Speciális címek:
+• 0.0.0.0/8 Szórásra fenntartva
+• 100.64.0.0/10 Large Scale NAT-nak fenntartva
+• 127.0.0.0/8 localhost, loopback címtartomány
+• 169.254.0.0/16 IPv4 link local cím. APIPA
+• 192.88.99.0/24 NATPT 6to4 anycast
+• 224.0.0.0/4 multicast tartománynév
+• 240.0.0.0/4 fenntartva
+• 255.255.255.255 broadcast

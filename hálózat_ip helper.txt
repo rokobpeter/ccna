@@ -1,0 +1,4 @@
+in f0/0.10
+ip helper-address 10.0.0.2
+in f0/0.20
+ip helper-address 10.0.0.2

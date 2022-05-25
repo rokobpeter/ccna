@@ -1,0 +1,17 @@
+DHCP szerver beállítása:
+
+R1(config)#ip dhcp pool lan1
+R1(config-dhcp)#network 192.168.0.0 255.255.255.0
+R1(config-dhcp)#default-router 192.168.0.1
+R1(config-dhcp)#dns-server 1.2.3.4
+R1(config-dhcp)#lease 1 12 30 (nap óra perc formátum)
+R1(config-dhcp)#domain-name teszt.hu
+R1(config-dhcp)#option 150 ip 192.168.0.1 (IP telefonnál a tftp szerver címe, innen jön a config)
+R1(config)#ip dhcp excluded-address 192.168.0.1 192.168.0.10
+
+IP cím kötése MAC címhezRouter(config)#ip dhcp pool FIXIP
+Router(dhcp-config)#host 200.20.2.20 255.255.255.0
+Router(dhcp-config)#hardware-address 01b7.0813.8811.66
+
+Ha a DHCP szerver másik hálózati szegmensen van, akkor a DHCP DISCOVER-t fogadó interfészen meg kell adni a DHCP szerver címét: 
+R1(config-if)# ip helper-address 192.168.10.1

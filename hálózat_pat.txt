@@ -1,0 +1,42 @@
+int g0/0
+ip nat inside
+exit
+int g0/1
+ip nat outside
+exit
+access-list 1 permit 192.168.10.0 0.0.0.255
+ip nat inside source list 1 int g0/1 overload
+
+int g0/0
+ip nat inside
+exit
+
+int g0/1
+ip nat outside
+exit
+access-list 100 permit ip any any
+ip nat inside source list 100 int g0/1 overload
+
+ip route 197.100.100.0 255.255.255.0 g0/1
+
+A belső oldalhoz tartozó interfész megjelölése:
+interface Fastethernet 0/0
+ip nat inside
+
+A külső oldalhoz tartozó interfész megjelölése:
+interface serial 0/0/0
+ip nat outside
+
+Statikus NAT (egy belső címet egy külső címre):
+ip nat inside source static 10.10.10.1 209.21.34.11
+
+Dinamikus NAT:
+ip nat pool public_access 209.165.200.242 209.165.200.253 netmask 255.255.255.224
+access-list 1 permit 192.168.123.0 0.0.0.255
+ip nat inside source list 1 pool public_access
+
+A PAT szabály megadása globális konfigurációs módban:
+ip nat inside source list 1 interface Serial 0/0/0 overload
+
+Alapértelmezett útvonal megadása a külvilág eléréséhez:
+ip route 0.0.0.0 0.0.0.0 ser 0/0/0

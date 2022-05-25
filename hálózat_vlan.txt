@@ -1,0 +1,37 @@
+VLAN-ok létrehozása:
+
+Első módszer:
+Switch#vlan database
+Switch(vlan)#vlan 10 name alfa
+
+Második módszer:
+Switch(config)#vlan 25
+Switch(config-vlan)#name gamma
+
+Portok hozzárendelése adott VLAN-hoz:
+Switch(config)#int fa0/1
+Switch(config-if)#switchport mode access
+Switch(config-if)#switchport access vlan 25
+
+Egyszerre több port hozzárendelése:
+Switch(config)#int range fa0/10 - 15
+Switch(config-if-range)#switchport mode access
+Switch(config-if-range)#switchport access vlan 25
+
+Trönkport beállítása:
+Switch(config)#int fa0/24
+Switch(config-if)#switchport mode trunk
+
+Natív VLAN beállítása (a trönk mindkét végén meg kell adni!):
+Switch(config-if)#switchport trunk native vlan 99
+
+Engedélyezett VLAN-ok megadása a trönkön:
+Switch(config-if)#switchport trunk allowed vlan [ except 2 | 3,4 | all ]
+
+Trönk állapotának ellenőrzése:
+Switch# show interfaces trunk
+
+Felügyeleti IP-cím adása a kapcsolónak (itt VLAN 1 a felügyeleti VLAN):
+Switch(config)#int vlan 1
+Switch(config-if)#ip address 10.0.0.1 255.0.0.0
+Switch(config-if)#no shut

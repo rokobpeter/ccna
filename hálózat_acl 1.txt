@@ -1,0 +1,69 @@
+Telephely_1
+ip access-list extended pc3_bimbo.hu_tiltas
+10 deny tcp host 20.0.0.10 host 30.30.30.30 eq 80
+20 deny tcp host 20.0.0.10 host 40.40.40.40 eq 23
+30 permit ip any any
+in g0/1
+ip access-group pc3_bimbo.hu_tiltas in
+
+Telephely_2
+ip access-list extended pc3_pc0_tiltas
+5 permit tcp host 50.0.0.10 host 40.40.40.40 eq 21
+10 deny ip host 50.0.0.10 40.0.0.0 0.0.0.255
+in g0/0
+ip access-group pc3_pc0_tiltas in
+
+Telephely_1
+ip access-list extended telnet_tiltas
+10 deny tcp any host 10.0.0.6 eq 23
+in g0/0
+ip access-group telnet_tiltas in
+
+
+R1
+ip access-list extended pc2_pc11_tiltas
+10 deny ip host 172.30.1.141 host 172.30.1.205
+20 permit ip any any
+in g0/1.20
+ip access-group pc2_pc11_tiltas in
+
+R1
+ip access-list extended pc3_pc8_tiltas
+10 deny ip host 172.30.1.140 host 172.30.0.12
+20 permit ip any any 
+in g0/1.20
+ip access-group pc3_pc8_tiltas in
+
+egybe kell
+
+R1
+ip access-list extended pc2_pc11_pc3_pc8_tiltas
+10 deny ip host 172.30.1.141 host 172.30.1.205
+15 deny ip host 172.30.1.140 host 172.30.0.12
+20 permit ip any any
+in g0/1.20
+ip access-group pc2_pc11_pc3_pc8_tiltas in
+
+R2
+ip access-list extended pc_http_szerver
+permit tcp host 172.30.1.12 host 172.30.0.254 eq www
+deny tcp host 172.30.1.12 host 172.30.0.254 eq 443
+permit tcp any host 172.30.0.254 eq 443
+in g0/0.30
+ip access-group pc_http_szerver out
+
+R3
+ip access-list extended vlan10_vlan20_tiltas_1
+deny ip 172.30.1.0 0.0.0.127 172.30.0.0 0.0.0.127 
+deny ip 172.30.1.224 0.0.0.31 172.30.0.0 0.0.0.127 
+permit ip any any
+in g0/0.20
+ip access-group vlan10_vlan20_tiltas_1 out
+
+R1
+ip access-list extended vlan10_vlan20_tiltas_2
+deny ip 172.30.1.0 0.0.0.127 172.30.1.128 0.0.0.63 
+deny ip 172.30.1.224 0.0.0.31 172.30.1.128 0.0.0.63  
+permit ip any any
+in g0/1.20
+ip access-group vlan10_vlan20_tiltas_2 out

@@ -1,0 +1,14 @@
+en
+conf t
+h Switch2
+in f0/24
+sw mo tr
+in f0/1
+sw mo acc
+sw acc vlan 20
+in f0/2
+sw mo acc
+sw acc vlan 10
+in f0/3
+sw mo acc
+sw acc vlan 15

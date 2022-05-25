@@ -1,0 +1,494 @@
+1. Forgalomirányítók konfigurálása
+
+Hostname megadása:
+(config)#hostname LAB_A
+
+Konzol és telnet kapcsolatok jelszavainak megadása:
+(config)#line con 0
+(config-line)#password cisco
+(config-line)#login
+(config-line)#exit
+(config)#line vty 0 5
+(config-line)#password cisco
+(config-line)#login
+(config-line)#exit
+
+Felhasználói névvel való belépés (aki 15-ös szinten van, enable jelszó
+nélkül is erre a szintre kerül):
+(config)# username admin privilege 15 secret cisco
+(config)#line vty 0 15
+(config-line)#privilege level 15
+(config-line)#login local
+Privilegizált (EXEC) üzemmód jelszavának (class) megadása:
+(config)#enable secret 0 class
+
+SSH engedélyezése
+
+(config)#hostname router1
+(config)#ip domain-name teszt.hu
+(config)#crypto key generate rsa
+
+vagy:
+
+(config)#crypto key generate rsa general-keys modulus 1024
+(config)#ip ssh version 1 | 2
+esetleg még:
+(config)#ip ssh time-out 60 (mp-ben megadva)
+(config)#ip ssh authentication-retries 2
+(config)#username admin privilege 15 password 0 cisco
+(config)#line vty 0 15
+(config-line)#login local
+(config-line)#transport input ssh
+(config-line)#privilege level 15
+
+Kulcs törlése:
+(config)#crypto key zeroize rsa
+
+IP útválasztás engedélyezése:
+(config)#ip routing
+
+Interfész konfiguráció (Ethernet, soros DCE és DTE interfész):
+(config)#interface Ethernet 0
+(config-if)#ip address 195.220.123.1 255.255.255.0
+(config-if)#description LAN-kapcsolat
+(config-if)#no shutdown
+(config-if)#exit
+(config)#interface Serial 0
+(config-if)#ip address 193.155.145.2 255.255.255.0
+(config-if)#encapsulation hdlc
+(config-if)#clock rate 64000
+(config-if)#no shutdown
+(config-if)#exit
+(config)#interface Serial 1
+(config-if)#ip address 188.15.70.1 255.255.255.0
+(config-if)#encapsulation hdlc
+(config-if)#no shutdown
+(config-if)#exit
+
+PPP hitelesítés (PAP)
+
+(config)#hostname egyik_router
+(config)#username masik_router password paptitok
+(config)#interface Serial 1
+(config-if)#ip address 188.15.70.1 255.255.255.0
+(config-if)#encapsulation ppp
+(config-if)#ppp authentication pap
+(config-if)#ppp pap sent-username egyik_router password paptitok
+(config-if)#no shutdown
+
+PPP hitelesítés (CHAP)
+
+(config)#hostname egyik_router
+(config)#username masik_router password chaptitok
+(config)#interface Serial 1
+(config-if)#ip address 188.15.70.1 255.255.255.0
+(config-if)#encapsulation ppp
+(config-if)#ppp authentication chap
+(config-if)#no shutdown
+
+Mindkét módszernél a másik routeren hasonlóan, de a megfelelő adatokkal (hostnevek, jelszavak) kell
+eljárni.
+
+Irányító protokollok beállítása:
+
+RIP protokoll:
+
+(config)#router rip
+ha VLSM-re is szükség van:
+(config-router)#version 2
+(config-router)#no auto-summary
+(config-router)#network 195.220.123.0
+(config-router)#network 193.155.145.0
+(config-router)#network 188.15.70.0
+(config-router)#exit
+Ha egy interfészen nem akarunk küldeni frissítéseket, csak fogadni:
+(config-router)#passive-interface F0/0
+
+OSPF protokoll:
+
+(config)#router ospf 115
+(config-router)#log-adjacency-changes
+(config-router)#network 195.220.123.0 0.0.0.255 area 0
+(config-router)#network 193.155.145.0 0.0.0.255 area 0
+(config-router)#network 188.15.70.0 0.0.0.255 area 0
+(config-router)#exit
+
+Router-azonosító megadása:
+(config-router)#router-id 200.0.0.1
+
+Interfész prioritásának megadása (ha 0, nem vesz részt a DR/BDR választásban):
+(config-if)#ip ospf priority 100
+
+Költségérték módosítása:
+(config-if)#ip ospf cost 100 (az érték 1-255 lehet)
+
+Loopback interfész létrehozása:
+(config)#interface loopback 0
+(config-if)#ip address 200.0.0.1 255.255.255.255
+
+Hitelesítés jelszóval:
+(config-router)#area 0 authentication
+(config-if)#ip ospf authentication-key titok
+
+Hitelesítés MD5 segítségével:
+(config-router)#area 0 authentication message-digest
+(config-if)#ip ospf message-digest-key 1 md5 titok123
+
+Ellenőrzés:
+#sh ip ospf interface
+#sh ip ospf neighbour [detail]
+#debug ip ospf adj | events
+
+Hello és halott időzítők beállítása:
+(config-if)#ip ospf hello-interval 15
+(config-if)#ip ospf dead-interval 50
+
+Alapértelmezett útvonal hirdetése:
+(config-router)# default-information originate
+
+EIGRP protokoll
+
+Alapbeállítás:
+(config)#router eigrp 111
+(config-router)#no auto-summary
+(config-router)#network 192.168.1.0
+(config-router)#network 200.0.0.0 255.255.255.252
+(config-router)#network 201.1.1.0 0.0.0.3
+
+Alapértelmezett útvonal hirdetése:
+(config-router)#redistribute static
+
+Nem egyenlő költésgű útvonalakon való terheléselosztás:
+(config-router)#variance 5
+(ekkor a legjobb útvonalnál 5-ször rosszabb költségű útvonalakat is bevonja az irányítótáblába)
+
+Közvetlenül kapcsolódó hálózatok bevonása az irányítási folyamatba (ezekbe nem küld EIGRP
+csomagokat):
+(config-router)#redistribute connected
+
+Útvonalösszevonás:
+(config-if)#ip summary-address eigrp 111 192.168.0.0 255.255.0.0
+
+Ellenőrző parancsok:
+show ip eigrp neighbors
+show ip eigrp topology [all-links]
+debug eigrp fsm | packets
+
+Konfiguráció lekérdezése, mentése és törlése
+
+Konfiguráció lekérdezése:
+#show running-config (RAM-ban lévő futó konfiguráció)
+#show startup-config (NVRAM-ban lévő mentett konfiguráció)
+Konfiguráció mentése az NVRAM-ba:
+#copy running-config startup-config
+
+Konfiguráció mentése TFTP szerverre:
+#copy running-config tftp
+
+Konfiguráció visszatöltése TFTP szerverről:
+#copy tftp running-config
+
+Konfiguráció törlése az NVRAM-ból:
+#erase startup-config
+
+Újraindítási parancs:
+#reload
+
+DHCP szerver beállítása
+
+(config)#ip dhcp excluded-address 192.168.0.1 192.168.0.10
+(config)#ip dhcp pool lan1
+(config-dhcp)#network 192.168.0.0 255.255.255.0
+(config-dhcp)#default-router 192.168.0.1
+(config-dhcp)#dns-server 1.2.3.4
+Ha a DHCP szerver másik hálózati szegmensen van, akkor a DHCP DISCOVER-t fogadó interfészen
+meg kell adni a DHCP szerver címét:
+(config-if)# ip helper-address 192.168.10.1
+
+NAT beállítása a forgalomirányítókon
+
+A belső oldalhoz tartozó interfész megjelölése:
+(config)#interface ethernet 0
+(config-if)#ip nat inside
+A külső oldalhoz tartozó interfész megjelölése:
+(config)#interface serial 0
+(config-if)#ip nat outside
+A NAT szabály megadása globális konfigurációs módban:
+(config)#ip nat inside source list 1 interface Serial 0 overload
+ACL szabály az engedélyezni kívánt belső hálózatok NAT-olásához:
+(config)#access-list 1 permit 195.220.123.0 0.0.0.255
+Alapértelmezett útvonal megadása a külvilág eléréséhez:
+(config)#ip route 0.0.0.0 0.0.0.0 193.155.145.1 permanent
+
+ACL (Access Control List) listák megadása
+
+Normál ACL a 193.225.10.0/24 célhálózathoz:
+(config)#access-list 1 permit 193.225.10.0 0.0.0.255
+Normál ACL egy számítógép tiltásához:
+(config)#access-list 1 deny host 195.140.100.5
+
+Kiterjesztett ACL szintaktikája:
+(config)#access-list szám permit|deny protokoll forrás helyettesítőmaszk
+cél helyettesítő-maszk [eq port [established]]
+A pédában tiltjuk a 195.220.0.0/16 hálózat felől a HTTP (80-as port) kéréseket bármilyen célhálózat
+felé:
+(config)#access-list 101 deny tcp 195.220.0.0 0.0.255.255 0.0.0.0 0.0.0.0 eq 80
+
+AZ ACL definiálása után az ACL-t interfészhez kell rendelni. Fontos megadni, hogy kimenő vagy
+bejövő interfészhez rendeljük-e!
+(config)#interface Serial 0
+(config-if)#ip access-group 1 out
+(config)#interface Ethernet 0
+(config-if)#ip access-group 101 in
+
+SHOW parancsok:
+
+#show running-config RAM-ban lévő futó konfiguráció megjeneítése
+#show startup-config NVRAM-ban tárolt konfiguráció megjelenítése
+#show interfaces Interfészek állapotainak megjelenítése
+#show ip route IP útválasztó tábla megjelenítése
+#show access-lists ACL listák megjelenítése
+#show ip interface IP alapú interfész protokoll beállítások megjelenítése
+#show ip protocols Aktív irányító protokollok állapotait jeleníti meg
+#show version Szoftver és hardver verzió információk
+#show cdp neighbors CDP protokoll által felfedezett szomszédos forgalomirányító adatainak megjelenítése
+#show ip nat translations IP NAT alapú címfordítással kapcsolatos információk megjelenítése
+#show ip dhcp binding DHCP szerver által kiadott címek adatai 
+
+Naplózás:
+Router(config)# logging on
+Router(config)# logging host syslog_szerver_ipcíme
+Router(config)# logging trap debugging
+Router(config)# logging userinfo
+Router(config)# [ no ] logging console
+
+SNMP beállítása:
+Router(config)#snmp-server community olvashat ro
+Router(config)#snmp-server community irhatis rw
+Router(config)#snmp-server location Szombathely
+Router(config)#snmp-server contact Pistike
+
+IOS kezelése
+Mentés TFTP szerverre:
+Router#copy flash tftp
+Másolás (frissítés) TFTP szerverről:
+Router#copy tftp flash
+Ha több IOS van a Flash-ben, megadható, melyiket indítsa legközelebb:
+Router(config)# boot system flash c1841-advipservicesk9-mz.124-15.bin
+
+IOS frissítés ROM monitor módban:
+rommon 1> tftpdnld
+A megjelenő információk alapján környezeti változókkal kell beállítani a router IP adatait (a legkisebb
+sorszámú FastEthernet interfészre értendő), valamint a TFTP szerver adatait, majd ezután újra adjuk ki a
+tftpdnld parancsot.
+
+JELSZÓVISSZAÁLLÍTÁS
+Routeren:
+· Bekapcsolás után röviddel a HyperTerminálban CTRL+Break megnyomása -> rommonitor mód
+· confreg 2142
+· boot
+· a router betölti az IOS-t és átlépi az indító konfigurációs fájlt, ezután beléphetünk enable módba, majd globális konfigba
+· Router(config)#copy start run
+· Router(config)#enable secret sajatjelszo
+· Router(config)#config-register 0x2102
+· Router(config)#do wr
+· Újraindítás után az eredeti konfigurációval, de már az új jelszóval indul Switch-en:
+· Bekapcsolás után röviddel folyamatosan nyomni kell a Mode gombot, míg folyamatos zölden nem világít, ekkor elengedni
+· A csökkentett üzemmódban ki kell adni először a flash_init, majd a load_helper parancsot
+· A flash-ben lévő config.text fájlt át kell nevezni, hogy ne találja meg az IOS:
+rename flash:config.text flash:c.text
+· boot parancs kiadása után a switch betölti az IOS-t, be tudunk lépni globális konfig módba:
+switch(config)#copy flash:c.txt running-config
+switch(config)#enable secret sajatjelszo
+switch(config)#do wr
+· Újraindítás után az eredeti konfigurációval, de már az új jelszóval indul
+
+Kapcsolók konfigurálása
+
+Üzemmódok:
+felhasználói
+ˇváltás: enable (en), ^váltás: exit
+privilegizált
+ˇváltás: configure terminal (conf t), ^váltás: exit
+globális konfigurációs
+ˇváltás: változó, ^váltás: exit, end
+speciális konfigurációs: vonali, interfész, VLAN stb.
+^váltás: exit, end
+Súgó használata:
+? kilistázza az összes, adott üzemmódban használható
+parancsot
+show ? kilistázza a show parancs paramétereit
+sh? kilistázza az összes sh-val kezdődő parancsot
+
+Show parancsok:
+
+parancs mit listáz
+arp ARP táblázat tartalma
+flash: A flash memória tartalma
+hosts az állomástábla (IP-címek és nevek összerendelése)
+interfaces kapcsolóportok állapotadatai
+mac-addr MAC címtábla tartalma
+port-security portbiztonság adatai (meg kell adni az interfészt is, pl. fa0/1)
+startup-config indító, bootoláskor aktív konfiguráció
+running-config aktív, futó konfiguráció
+users bejelentkezett felhasználók adatai
+version az IOS adatai, memóriafoglaltság
+vlan A VLAN-ok adatai
+
+Konfiguráció mentése:
+
+Switch# copy run start
+vagy
+Switch# wr
+Állomásnév beállítása:
+Switch(config)# hostname kapcsolo_neve
+Konzoljelszó beállítása:
+Switch(config)# line console 0
+Switch(config-line)# password jelszo
+Switch(config-line)# login
+
+Enable jelszó beállítása:
+Switch(config)# enable password jelszo
+Enable titkos jelszó (ez az „erősebb”):
+Switch(config)# enable secret jelszo
+
+Jelszótitkosítás bekapcsolása:
+Switch(config)# service passwod-encryption
+Virtuális terminálok jelszavainak beállítása:
+Switch(config)# line vty 0 15
+Switch(config-line)# password jelszo
+Switch(config-line)# login
+
+Napi üzenet beállítása (elválasztó karakter pl. a # ):
+Switch(config)# banner motd #Belepes csak engedellyel!#
+Switch portok beállítása:
+Switch(config)#interface FastEthernet 0/2
+Switch(config-if)#duplex auto | half | full
+Switch(config-if)#speed auto | 10 | 100
+
+MAC-cím statikus megadása adott porthoz:
+Switch(config)#mac-address-table static 0123.4567.89AB vlan 1 int fa0/1
+
+MAC-címtábla törlése:
+Switch#clear mac-address-table dynamic
+Portbiztonság konfigurálása:
+Switch(config)#int fa0/1
+Switch(config-if)#switchport mode access
+Switch(config-if)#switchport port-security mac-address sticky
+
+vagy általunk megadott címmel:
+
+Switch(config-if)#switchport port-security mac-address 0123.4567.89AB
+Switch(config-if)#switchport port-security violation shutdown
+ha nem szeretnénk, hogy letiltson:
+Switch(config-if)#switchport port-security violation [ protect |
+restrict ]
+
+Portbiztonság miatt letiltott port újraengedélyezése:
+Switch(config)#int fa0/1
+Switch(config-if)#shutdown
+Switch(config-if)#no shut
+Porthoz leírás, megjegyzése fűzése:
+Switch(config)#int fa0/24
+
+Switch(config-if)#description Kapcsoloport a szerverhez
+Felügyeleti IP-cím adása a kapcsolónak:
+Switch(config)#int vlan 1
+Switch(config-if)#ip address 10.0.0.1 255.0.0.0
+Switch(config-if)#no shut
+
+Alapértelmezett átjáró megadása:
+Switch(config)#ip default-gateway 10.0.0.254
+Állomástábla öszeállítása (ellenőrzése: show hosts):
+Switch(config)#ip host alfa 10.0.0.1
+Switch(config)#ip host beta 10.0.0.2
+
+VLAN-ok létrehozása:
+
+Első módszer:
+Switch#vlan database
+Switch(vlan)#vlan 10 name alfa
+VLAN 10 added:
+Name: alfa
+Switch(vlan)#vlan 100 name beta
+VLAN 100 added:
+Name: beta
+
+Második módszer:
+Switch(config)#vlan 25
+Switch(config-vlan)#name gamma
+Portok hozzárendelése adott VLAN-hoz:
+Switch(config)#int fa0/1
+Switch(config-if)#switchport mode access
+Switch(config-if)#switchport access vlan 10
+
+Egyszerre több port hozzárendelése:
+Switch(config)#int range fa0/10 - 15
+Switch(config-if-range)#switchport mode access
+Switch(config-if-range)#switchport access vlan 25
+
+Trönkport beállítása:
+Switch(config)#int fa0/24
+Switch(config-if)#switchport mode trunk
+Natív VLAN beállítása (a trönk mindkét végén meg kell adni!):
+Switch(config-if)#switchport trunk native vlan 99
+
+Engedélyezett VLAN-ok megadása a trönkön:
+Switch(config-if)#switchport trunk allowed vlan [ except 2 | 3,4 | all]
+
+Trönk állapotának ellenőrzése:
+Switch# show interfaces trunk
+
+Futó konfiguráció mentése TFTP-szerverre:
+Switch#copy running-config tftp
+Address or name of remote host []? 10.0.0.10
+Destination filename [Switch-confg]?
+!!
+[OK - 1541 bytes]
+Indító konfiguráció letöltése TFTP-szerverről:
+Switch#copy tftp startup-config
+Address or name of remote host []? 10.0.0.10
+Source filename []? Switch-confg
+Destination filename [startup-config]?
+Loading Switch-confg from 10.0.0.10: !
+[OK - 1541 bytes]
+
+VTP (virtuális trönkprotokoll) konfigurálása
+
+Első módszer (switchportot is támogató routereken csak ez működik):
+Switch# vlan database
+Switch(vlan)# vtp domain tartománynév
+Jelszó beállítása:
+Switch(vlan)#vtp password jelszó
+Protokoll verziójának beállítása:
+Switch(vlan)# vtp v2-mode
+Eszköz üzemmódjának beállítása (alapesetben szerverként működik, a kliens csak fogadja a
+módosításokat, a transzparens átengedi a VTP-t és tőle függetlenül működtethet saját VLAN-okat):
+Switch(vlan)# vtp mode server | client | transparent
+
+Második módszer (globális konfig módban működik):
+Switch(config)# vtp domain tartománynév
+Switch(config)# vtp password jelszó
+Switch(config)# vtp version 2
+Switch(config)# vtp mode server | client | transparent
+VTP ellenőrzése:
+Switch# show vtp status
+Switch# show vtp password
+VTP pruning:
+A kapcsolók nem továbbítják a trönk túlsó felére olyan VLAN-ok adatait, amikbe tartozó állomások nem
+léteznek a túloldalon, ezáltal kisebb lesz a fölösleges hálózati forgalom.
+
+Switch(config)# vtp pruning
+Spanning Tree Protocol (STP)
+A kialakult állapot megjelenítése:
+Switch# show spanning-tree [detail | summary | vlan x ]
+Üzemmód beállítása (normál / gyors)
+Switch(config)#spanning-tree mode pvst | rapid-pvst
+Hídprioritás beállítása (az érték 0-61440 között lehet, 4096-os lépésekkel):
+Switch(config)#spanning-tree vlan 1 priority 4096
+illetve (akár VLAN-onként):
+Switch(config)#spanning-tree vlan 1 root [ primary | secondary ]
+Hozzáférési portok gyorstovábbító üzemmódba állítása:
+Switch(config)#spanning-tree portfast default
+interfészenként:
+Switch(config-if)#spanning-tree portfast

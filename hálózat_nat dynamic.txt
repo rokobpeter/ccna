@@ -1,0 +1,11 @@
+acces-list 1 permit 192.168.0.0 0.0.0.255
+ip nat pool tarolo 40.0.0.2 40.0.0.4 netmask 255.0.0.0
+ip nat inside source list 1 pool tarolo
+int fa0/0
+ip nat in
+exit
+int fa0/1
+ip nat out
+ip route 40.0.0.0 255.0.0.0 30.0.0.1
+
+show ip nat translations

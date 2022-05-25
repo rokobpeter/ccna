@@ -1,0 +1,42 @@
+int fa0/4
+switchport mode access
+switchport port-security
+switchport port-security mac-address sticky
+switchport port-security violation shutdown
+switchport port-security maximum 1
+
+
+vagy általunk megadott címmel:
+switchport port-security mac-address 0123.4567.89AB
+switchport port-security violation shutdown
+
+ha nem szeretnénk, hogy letiltson:
+switchport port-security violation [ protect | restrict ]
+
+vagy ha maximum 2 MAC címet engedünk:
+switchport port-security mac-address maximum 2
+
+Portbiztonság miatt letiltott port újraengedélyezése:
+int fa0/1
+shutdown
+no shut
+
+ Kikapcsolás f0/1 porton:
+
+enable
+configure terminal
+int f0/20
+no switchport mode access
+no switchport port-security
+no switchport port-security mac-address sticky 
+
+Külön ki kell kapcsolni a mac-address-t.
+
+Port visszakapcsolása Secure-shutdown után:
+
+enable
+clear port-security all
+conf t
+int f0/1
+shutdown
+no shutdown

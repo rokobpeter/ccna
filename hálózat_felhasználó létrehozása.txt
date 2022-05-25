@@ -1,0 +1,6 @@
+Felhasználó létrehozás és azzal való belépés (aki 15-ös szinten van, enable jelszó nélkül is erre a szintre kerül):
+
+R1(config)# username admin privilege 15 secret cisco
+R1(config)#line vty 0 15
+R1(config-line)#privilege level 15
+R1(config-line)#login local

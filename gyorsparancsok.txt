@@ -1,0 +1,19 @@
+portal.office.com
+portal.azure.com 
+
+CTRL+SHIFT+6 - domain reset
+SHIFT+INS - beszúrás config
+WINDOWS+SHIFT+S - képernyő kivágás
+CTRL/RIGHT+DEL - CTRL+ALT+DEL
+gmail: 
+rokob.peter@students.jedlik.eu
+QWERTzuiop012345
+gép:
+rokob.peter
+QWer0123
+netacad.com
+rokobp.uszt@gmail.com
+QWer0123
+moodle.jedlik.eu:
+rokob.peter
+QWer0123

@@ -1,0 +1,33 @@
+line con 0
+password cisco
+login
+line vty 0 15
+password class
+login
+enable secret cisco
+
+1.
+ip access-list standard telnet_tiltas
+permit host 10.0.2.2
+
+line vty 0 15
+access-class telnet_tiltas in
+
+R1(config)# ip access-list standard 1
+R1(config-std-nacl)# no 10
+R1(config-std-nacl)# 10 deny host 192.168.10.11
+R1(config-std-nacl)# end
+
+
+2. 
+ip access-list extended icmp_tiltas
+permit icmp 10.0.1.0 0.0.0.255 host 10.0.2.2
+
+interface FastEthernet0/1.10
+ip access-group icmp_tiltas in
+
+3. normál
+ip access-list standard vlan15_tiltas
+deny 125.125.124.64 0.0.0.31
+in fa0/0.15
+ip access-group vlan15_tiltas in
